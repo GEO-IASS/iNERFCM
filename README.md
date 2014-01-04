@@ -1,4 +1,4 @@
-Improved Relational Fuzzy _c_-Means
+Improved Non-Euclidean Relational Fuzzy _c_-Means
 ==========================================
 
 Overview
