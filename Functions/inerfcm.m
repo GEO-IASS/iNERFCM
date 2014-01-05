@@ -62,8 +62,7 @@ function output = inerfcm(R, c, options)
 %   [3] J. Dattorro, Convex optimization and Euclidean distance geometry. 2005.
 
     %% iRFCM default values
-    m = 2; epsilon = 0.0001;maxIter = 100;
-    delta = [];gamma = 0;initType = 2;
+    m = 2; epsilon = 0.0001;maxIter = 100;transformType='NE';
     
     %% Overwrite iRFCM options by the user defined options
     if nargin == 3 && isstruct(options)
@@ -73,35 +72,21 @@ function output = inerfcm(R, c, options)
                case 'fuzzifier', m = options.fuzzifier;
                case 'epsilon', epsilon = options.epsilon; 
                case 'initType', initType = options.initType; 
-               case 'delta', delta = options.delta; 
-               case 'gamma', gamma = options.gamma; 
-               case 'maxIter', maxIter = options.maxIter; 
+               case 'maxIter', maxIter = options.maxIter;
+               case 'transform', transformType = options.transform;
            end
         end
     end
-
+    
     %% Initialize variables
-    D = R;n=size(D,1);d = zeros(c,n);
-    numIter=0;stepSize=epsilon;U=Inf(c,n);
+    D = R;n=size(D,1);d = zeros(c,n);bcount = 0;
+    numIter=0;stepSize=epsilon;U=Inf(c,n);beta=0.0001;
     
     %some data checking and validation
     if min(min(D)) < 0 || any(any(abs(D - D') > 0)) || max(diag(D)) > 0
 		error('R is not properly initialized.')
 	elseif size(D) ~= [n,n]
 		error('Dimensions R are inconsistent.')
-    end
-    
-    %If delta is provided
-    if isfield(options,'delta')
-        euc = is_euclidean(R);
-        
-        % if R is not Euclidean, then Euclideanize it
-        if ~euc
-            [D, gamma] = euclideanize(R, delta, gamma);
-            eps1 = stress(R, D, 'eps1');
-            ks = stress(R, D.*eps1, 'stress1');
-            euc = struct('kruskalStress',ks,'gamma',gamma,'D',D);
-        end
     end
     
     %initialize relational cluster centers
@@ -121,8 +106,9 @@ function output = inerfcm(R, c, options)
         %check if any of the relational distances has negative distance
         j = find(d(:) < 0);
         if ~isempty(j)
-           output.Error = sprintf('RFCM encountered %d negative relational distances in iteration %d. RFCM terminated execuation.\nPlease re-run iRFCM and provide Delta to Euclideanize D before clustering\n\n', length(j), numIter); 
-           return;
+           %tranform the distance matrices here
+           [D d beta] = transform(transformType,D,d,V,beta,j);
+           bcount = bcount + 1;
         end
         
         %Get new partition matrix U:
@@ -145,8 +131,8 @@ function output = inerfcm(R, c, options)
     %prepare output structure
     output = struct('U',U,...
                     'V',V,...
-                    'terminationIter',numIter);
+                    'terminationIter',numIter,...
+                    'blockerCount',bcount);
                 
-    if exist('euc','var'),output.euc = euc;end
     if nargin == 3,output.options = options;end
 end
