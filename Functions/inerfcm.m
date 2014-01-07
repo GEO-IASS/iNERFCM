@@ -100,6 +100,17 @@ function output = inerfcm(R, c, options)
         % First, get new initial values for d:
         for i=1:c
             d(i,:)=D*V(i,:)'-V(i,:)*D*V(i,:)'/2;
+            
+            idx = find(d(i,:) < 0);
+            
+            if ~isempty(idx)
+               idx = idx(1);
+               tmp1 = D*V(i,:)'
+               tmp2 = V(i,:)*D*V(i,:)'/2;
+               
+               tmp1(idx)
+               tmp2
+            end
         end
        
         %if D is not Euclideanized RFCM might fail
