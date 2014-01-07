@@ -105,7 +105,7 @@ function output = inerfcm(R, c, options)
             
             if ~isempty(idx)
                idx = idx(1);
-               tmp1 = D*V(i,:)'
+               tmp1 = D*V(i,:)';
                tmp2 = V(i,:)*D*V(i,:)'/2;
                
                tmp1(idx)
