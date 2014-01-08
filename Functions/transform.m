@@ -24,6 +24,19 @@ function [D d beta] = transform(type, D, d, V, beta, j)
         case 'BS'
             
         case 'SU'
+            MST = graphminspantree(sparse(D));
+            MST = MST + MST';
+            
+            for idx=1:length(j)
+               for k=1:n
+                   [~, z]=ind2sub([c n],j(idx));
+                   
+                   if z ~= k
+                        D(z,k) = su_dist(z,k,D,MST); 
+                        D(z,k) = D(k,z);
+                   end
+               end
+            end
             
         case 'PF'
             
