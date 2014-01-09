@@ -11,11 +11,7 @@ D01 = D./max(D(:));
 f = figure('Visible','off');imagesc(D.^2);colormap('gray');colorbar;
 print(f, '-djpeg', 'Results/GDP194/Images/GDP194.jpg');
 
-<<<<<<< HEAD
 transforms = {'SU','SU','BS','PF','EP','LF'};
-=======
-transforms = {'NE','SU','BS','PF','EP','LF'};
->>>>>>> e266796c6cd380dd8acb3ee3bc4ac9ddc1ae456e
                     
 %% iRFCM configurations/options (those are the default values)
 options.fuzzifier        = 2;
@@ -29,8 +25,6 @@ c= 3;
 %% Since RFCM failed we need to run iRFCM
 % loop for every delta
 for i=1:2 %length(transforms)
-    transforms{i}
-    
     options.transform = transforms{i};
     out = inerfcm(D.^2,c,options);
     

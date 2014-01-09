@@ -28,7 +28,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, j)
             MST = MST + MST';
             
             for idx=1:length(j)
-<<<<<<< HEAD
+
                 [clust, z]=ind2sub([c n],j(idx));
                 
                 p = find_prototype(U(clust,:),D);
@@ -37,7 +37,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, j)
                     D(p,z) = su_dist(z,p,D,MST); 
                     D(z,p) = D(p,z);
                 end
-=======
+
                [clust,z]=ind2sub([c n],j(idx));
                [~,p] = sort(V(clust,:),'descend');
                
@@ -49,7 +49,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, j)
                     D(p(pi),z) = D(z,p(pi));
                 end
                end
->>>>>>> e266796c6cd380dd8acb3ee3bc4ac9ddc1ae456e
+
             end
             
             d(d<min_d) = min_d;
