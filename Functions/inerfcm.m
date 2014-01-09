@@ -106,6 +106,8 @@ function output = inerfcm(R, c, options)
         %check if any of the relational distances has negative distance
         j = find(d(:) < 0);
         if ~isempty(j)
+           fprintf('t=%d: found %d negative relational distances.\n',numIter, length(j));
+           
            %tranform the distance matrices here
            [D d beta] = transform(transformType,D,d,V,U,beta,j);
            bcount = bcount + 1;
