@@ -11,7 +11,7 @@ D01 = D./max(D(:));
 f = figure('Visible','off');imagesc(D.^2);colormap('gray');colorbar;
 print(f, '-djpeg', 'Results/GDP194/Images/GDP194.jpg');
 
-transforms = {'SU','BS','PF','EP','LF','SU'};
+transforms = {'SU','SU','BS','PF','EP','LF'};
                     
 %% iRFCM configurations/options (those are the default values)
 options.fuzzifier        = 2;

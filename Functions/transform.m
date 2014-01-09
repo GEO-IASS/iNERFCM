@@ -1,10 +1,10 @@
-function [D d beta] = transform(type, D, d, V, beta, j)
+function [D d beta] = transform(type, D, d, V, U, beta, j)
 
     [c n] = size(d);
+    min_d=1.0e-10;
     
     switch type
         case 'NE' %NERFCM approach
-            min_d=1.0e-10;
             d_adjustment=zeros(c,n);
             
             for i=1:c
@@ -28,15 +28,17 @@ function [D d beta] = transform(type, D, d, V, beta, j)
             MST = MST + MST';
             
             for idx=1:length(j)
-               for k=1:n
-                   [~, z]=ind2sub([c n],j(idx));
-                   
-                   if z ~= k
-                        D(z,k) = su_dist(z,k,D,MST); 
-                        D(z,k) = D(k,z);
-                   end
-               end
+                [clust, z]=ind2sub([c n],j(idx));
+                
+                p = find_prototype(U(clust,:),D);
+          
+                if z ~= p
+                    D(p,z) = su_dist(z,p,D,MST); 
+                    D(z,p) = D(p,z);
+                end
             end
+            
+            d(d<min_d) = min_d;
             
         case 'PF'
             
