@@ -4,7 +4,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, j)
     min_d=1.0e-10;
     
     switch type
-        case 'NE' %NERFCM approach
+        case 'NE' 
             d_adjustment=zeros(c,n);
             
             for i=1:c
