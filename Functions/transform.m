@@ -12,12 +12,12 @@ function [D d beta] = transform(type, D, d, V, U, beta, negIdx)
             
             for i = uniqueClusters
                 k = points(clusters == i);
-                tmp(i,k) = (V(i,:)*V(i,:)') - 2*V(i,k) + 1;
+                tmp(i,k) = V(i,:)*V(i,:)' - 2*V(i,k) + 1;
             end
             
             deltaBeta = max(max((-2.*d(negIdx))./tmp(negIdx)));
             d(negIdx) = d(negIdx) + (deltaBeta/2).*tmp(negIdx);
-            D = D + deltaBeta;
+            D = D + deltaBeta * (ones(n)-eye(n));
             beta = beta + deltaBeta;
             
         case 'BS'
