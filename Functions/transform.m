@@ -17,7 +17,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, negIdx)
             
             deltaBeta = max(max((-2.*d(negIdx))./tmp(negIdx)));
             d(negIdx) = d(negIdx) + (deltaBeta/2).*tmp(negIdx);
-            D = D + deltaBeta;
+            %D = D + deltaBeta;
             beta = beta + deltaBeta;
             
         case 'BS'
