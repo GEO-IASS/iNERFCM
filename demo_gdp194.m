@@ -27,7 +27,7 @@ c= 3;
 for i=1:1 %length(transforms)
     options.transform = transforms{i};
     out = inerfcm(D.^2,c,options);
-    
+        
     %save the partition matrix for this delta
     U = out.U;
     dlmwrite(sprintf('Results/GDP194/Partitions/U_%s(%d).csv',transforms{i},c),U, 'delimiter',',');
