@@ -1,25 +1,24 @@
-function [D d beta] = transform(type, D, d, V, U, beta, j)
+function [D d beta] = transform(type, D, d, V, U, beta, negIdx)
 
     [c n] = size(d);
-    min_d=1.0e-10;
     
     switch type
         case 'NE' 
-            d_adjustment=zeros(c,n);
+            %get the index to the cluster and the point that caused the
+            %negative distance
+            [clusters, points]=ind2sub([c n],negIdx);
+            uniqueClusters = unique(clusters)';
+            tmp = zeros(c,n);
             
-            for i=1:c
-				work = (V(i,:) * V(i,:)' +1) / 2;
-				d_adjustment(i,:) = work - V(i,:); 
+            for i = uniqueClusters
+                k = points(clusters == i);
+                tmp(i,k) = (V(i,:)*V(i,:)') - 2*V(i,k) + 1;
             end
             
-			work = (min_d - d(j)) ./ d_adjustment(j);
-			beta_adjustment = max(work);
-			beta = beta + beta_adjustment;
-			d = d + beta_adjustment * d_adjustment;
-			D = D + beta_adjustment * (ones(n) - eye(n));
-            
-            % Third, adjust all d values to be at least as big as min_d:
-            d(d<min_d) = min_d;
+            deltaBeta = max(max((-2.*d(negIdx))./tmp(negIdx)));
+            d(negIdx) = d(negIdx) + (deltaBeta/2).*tmp(negIdx);
+            D = D + deltaBeta;
+            beta = beta + deltaBeta;
             
         case 'BS'
             
@@ -52,7 +51,7 @@ function [D d beta] = transform(type, D, d, V, U, beta, j)
 
             end
             
-            d(d<min_d) = min_d;
+            d(d<0) = min_d;
             
         case 'PF'
             

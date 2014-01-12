@@ -82,13 +82,6 @@ function output = inerfcm(R, c, options)
     D = R;n=size(D,1);d = zeros(c,n);bcount = 0;
     numIter=0;stepSize=epsilon;U=Inf(c,n);beta=0.0001;
     
-    %some data checking and validation
-    if min(min(D)) < 0 || any(any(abs(D - D') > 0)) || max(diag(D)) > 0
-		error('R is not properly initialized.')
-	elseif size(D) ~= [n,n]
-		error('Dimensions R are inconsistent.')
-    end
-    
     %initialize relational cluster centers
     V = init_centers(initType, n, c, D);
     
@@ -96,35 +89,59 @@ function output = inerfcm(R, c, options)
     while  numIter < maxIter && stepSize >= epsilon
         U0 = U;
         
-        %Get new (quasi-squared-distance values) d:
-        % First, get new initial values for d:
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Compute the relational distances between "clusters" and points
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for i=1:c
             d(i,:)=D*V(i,:)'-V(i,:)*D*V(i,:)'/2;
         end
        
-        %if D is not Euclideanized RFCM might fail
-        %check if any of the relational distances has negative distance
-        j = find(d(:) < 0);
-        if ~isempty(j)
-           fprintf('t=%d: found %d negative relational distances.\n',numIter, length(j));
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Check for failure, are any of the d < 0?
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        negIdx = find(d(:) < 0);
+        if ~isempty(negIdx)
+           fprintf('t=%d: found %d negative relational distances.\n',numIter, length(negIdx));
            
            %tranform the distance matrices here
-           [D d beta] = transform(transformType,D,d,V,U,beta,j);
+           [D d beta] = transform(transformType,D,d,V,U,beta,negIdx);
            bcount = bcount + 1;
         end
         
-        %Get new partition matrix U:
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Update the partition matrix U
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %First, compute U for only those k points where d > 0
+        [~, k] = find(d > 0);
+        
         d=d.^(1/(m-1));
-		work = 1 ./ d;
-		work = sum(work);
-        U=1./d;
-        U = U./(ones(c,1)*work);
-		
-        %Get new V prototypes assuming we initialized V first
+        tmp = sum(1./d(:,k));
+        U = zeros(c,n);
+        U(:,k) = (1./d(:,k))./(ones(c,1)*tmp);
+        
+        %Second, for the points with d = 0
+        %find the clusters and the points where d = 0
+        [clusters, points] = find(d == 0);
+        uniquePoints = unique(points)';
+        
+        for k = uniquePoints
+            %some k might have a zero distance to more than one cluster
+            idx = find(points == k);
+            sub = sub2ind([c n],clusters(idx),points(idx));
+            
+            %The membership is 1/number of clusters to which k has d = 0
+            U(sub) =  1/length(idx);
+        end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Update cluster prototypes V
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         V=U.^m;  
         V = V./(sum(V,2) * ones(1,n));
-    
-        %Calculate step_size and return to top of loop:
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Update the step size
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		stepSize=max(max(abs(U-U0)));
         
         numIter = numIter + 1;
