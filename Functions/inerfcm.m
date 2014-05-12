@@ -79,32 +79,45 @@ function output = inerfcm(R, c, options)
     end
     
     %% Initialize variables
-    D = R;n=size(D,1);d = zeros(c,n);bcount = 0;
-    numIter=0;stepSize=epsilon;U=Inf(c,n);beta=0.0001;
+    D = R;n=size(D,1);d = zeros(c,n);bcount = 0;fcount = zeros(1,c);
+    numIter=0;stepSize=epsilon;beta=0.0001; %U=Inf(c,n);
     
     %initialize relational cluster centers
-    V = init_centers(initType, n, c, D);
+    U = init_centers(initType, n, c, D);
+    %U = [0.0570    0.2666    0.1265    0.2469         0    0.3030;
+    %0.1932    0.1567    0.2594         0    0.0881    0.3026;
+     %    0    0.2475    0.0106    0.4194    0.0442    0.2783];
+    
+    MST = graphminspantree(sparse(R));
+    MST = MST + MST';
+    changes = [];
     
     %% Begin the main loop:
     while  numIter < maxIter && stepSize >= epsilon
         U0 = U;
         
+        V=U.^m;  
+        V = V./(sum(V,2) * ones(1,n));
+        
+        U;
+        V;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Compute the relational distances between "clusters" and points
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for i=1:c
             d(i,:)=D*V(i,:)'-V(i,:)*D*V(i,:)'/2;
         end
-       
+        d;
+        D;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Check for failure, are any of the d < 0?
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        negIdx = find(d(:) < 0);
+        negIdx = find(d(:) < 0)';
         if ~isempty(negIdx)
            fprintf('t=%d: found %d negative relational distances.\n',numIter, length(negIdx));
            
            %tranform the distance matrices here
-           [D d beta] = transform(transformType,D,d,V,U,beta,negIdx);
+           [D d beta, fcount, changes] = transform(transformType,R,D,d,V,U,beta,negIdx, fcount, MST, changes);
            bcount = bcount + 1;
         end
         
@@ -136,8 +149,8 @@ function output = inerfcm(R, c, options)
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Update cluster prototypes V
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        V=U.^m;  
-        V = V./(sum(V,2) * ones(1,n));
+        %V=U.^m;  
+        %V = V./(sum(V,2) * ones(1,n));
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Update the step size
@@ -151,7 +164,9 @@ function output = inerfcm(R, c, options)
     output = struct('U',U,...
                     'V',V,...
                     'terminationIter',numIter,...
-                    'blockerCount',bcount);
+                    'blockerCount',bcount,...
+                    'D',D,...
+                    'changes',changes);
                 
     if nargin == 3,output.options = options;end
 end

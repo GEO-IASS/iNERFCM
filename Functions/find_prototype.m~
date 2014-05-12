@@ -1,0 +1,11 @@
+function [p, k] = find_prototype(U,D)
+    tmp = D*U';
+    [~,p] = min(tmp);
+    [~, idx] = sort(tmp);
+    find(U>0.33);
+    k = idx(find(U>0.33))';
+    
+    %[~, idx] = sort(U);out
+    
+    %k = idx(1:100)';
+end

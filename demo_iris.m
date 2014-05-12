@@ -8,9 +8,15 @@ D = squareform(pdist(X,'chebychev'));
 n = size(D,1);
 
 %compute the normalized dissimilarity image from D
-D01 = D./max(D(:));
 f = figure('Visible','off');imagesc(D.^2);colormap('gray');colorbar;
 print(f, '-djpeg', 'Results/Iris/Images/Iris.jpg');
+
+%set the number of clusters to 3
+c= 3;
+
+% Assumed ground truth
+labels = [ones(1,50) 2*ones(1,50) 3*ones(1,50)];
+GT = sparse(labels, 1:length(labels),1,c,length(labels));
 
 transforms = {'NE','BS','PF','EP','LF','SU'};
         
@@ -19,9 +25,6 @@ options.fuzzifier        = 2;
 options.epsilon          = 0.0001;
 options.maxIter          = 100;
 options.initType         = 2;
-
-%set the number of clusters to 3
-c= 3;
 
 %% Since RFCM failed we need to run iRFCM
 % loop for every delta
@@ -38,4 +41,9 @@ for i=1:1 %length(transforms)
     uu = 1 - ((U'*U)./max(max(U'*U)));
     f = figure('Visible','off');imagesc(uu);colormap('gray');caxis([0 1]);
     print(f, '-djpeg', sprintf('Results/Iris/Images/UU_%s(%d).jpg',transforms{i},c));
+    
+    %compute the crisp rand index
+    [~,labels] = max(U);
+    U = sparse(labels, 1:length(labels),1,c,length(labels));
+    r = rand_index(U,GT,2)
 end

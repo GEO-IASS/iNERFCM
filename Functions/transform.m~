@@ -51,6 +51,7 @@ function [D d beta fcount, changes] = transform(type,R, D, d, V, U, beta, negIdx
                 
                 %for p = np
                 for z = k
+                    if p == z
                     h = str2num(sprintf('%d%d%d%d',p,z,z,p));
                     
                     if z ~= p && isempty(find(changes == h, 1))
