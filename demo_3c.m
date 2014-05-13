@@ -32,7 +32,6 @@ f = figure('Visible','off');imagesc(D);colormap('gray');colorbar;
 print(f, '-djpeg', 'Results/3Clouds/Images/Iris.jpg');
 
 %D = D([1:5 60:65 120:125],[1:5 60:65 120:125])
-transforms = {'SU','BS','PF','EP','LF','SU'};
         
 %% iRFCM configurations/options (those are the default values)
 options.fuzzifier        = 2;
@@ -44,18 +43,14 @@ options.initType         = 2;
 c= 3;
 
 %% Since RFCM failed we need to run iRFCM
-% loop for every delta
-for i=1:1 %length(transforms)
-    options.transform = transforms{i};
-    out = inerfcm(D,c,options);
-    
-    %save the partition matrix for this delta
-    U = out.U;
-    dlmwrite(sprintf('Results/3Clouds/Partitions/U_%s(%d).csv',transforms{i},c),U, 'delimiter',',');
+out = inerfcm(D,c,options);
 
-    %save the induced dissimilarity image for this delta
-    %Ref. J. Huband and J. Bezdek, “VCV2– Visual cluster validity,” Comput. Intell. Res. Front., 2008.
-    uu = 1 - ((U'*U)./max(max(U'*U)));
-    f = figure('Visible','off');imagesc(uu);colormap('gray');caxis([0 1]);
-    print(f, '-djpeg', sprintf('Results/3Clouds/Images/UU_%s(%d).jpg',transforms{i},c));
-end
+%save the partition matrix for this delta
+U = out.U;
+dlmwrite(sprintf('Results/3Clouds/Partitions/U(%d).csv',c),U, 'delimiter',',');
+
+%save the induced dissimilarity image for this delta
+%Ref. J. Huband and J. Bezdek, “VCV2– Visual cluster validity,” Comput. Intell. Res. Front., 2008.
+uu = 1 - ((U'*U)./max(max(U'*U)));
+f = figure('Visible','off');imagesc(uu);colormap('gray');caxis([0 1]);
+print(f, '-djpeg', sprintf('Results/3Clouds/Images/UU(%d).jpg',c));

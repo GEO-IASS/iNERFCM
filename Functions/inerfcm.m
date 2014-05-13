@@ -62,7 +62,7 @@ function output = inerfcm(R, c, options)
 %   [3] J. Dattorro, Convex optimization and Euclidean distance geometry. 2005.
 
     %% iRFCM default values
-    m = 2; epsilon = 0.0001;maxIter = 100;transformType='NE';
+    m = 2; epsilon = 0.0001;maxIter = 100;
     
     %% Overwrite iRFCM options by the user defined options
     if nargin == 3 && isstruct(options)
@@ -73,20 +73,16 @@ function output = inerfcm(R, c, options)
                case 'epsilon', epsilon = options.epsilon; 
                case 'initType', initType = options.initType; 
                case 'maxIter', maxIter = options.maxIter;
-               case 'transform', transformType = options.transform;
            end
         end
     end
     
     %% Initialize variables
-    D = R;n=size(D,1);d = zeros(c,n);bcount = 0;fcount = zeros(1,c);
+    D = R;n=size(D,1);d = zeros(c,n);bcount = 0;
     numIter=0;stepSize=epsilon;beta=0.0001; %U=Inf(c,n);
     
     %initialize relational cluster centers
     U = init_centers(initType, n, c, D);
-    %U = [0.0570    0.2666    0.1265    0.2469         0    0.3030;
-    %0.1932    0.1567    0.2594         0    0.0881    0.3026;
-     %    0    0.2475    0.0106    0.4194    0.0442    0.2783];
     
     MST = graphminspantree(sparse(R));
     MST = MST + MST';
@@ -99,16 +95,13 @@ function output = inerfcm(R, c, options)
         V=U.^m;  
         V = V./(sum(V,2) * ones(1,n));
         
-        U;
-        V;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Compute the relational distances between "clusters" and points
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for i=1:c
             d(i,:)=D*V(i,:)'-V(i,:)*D*V(i,:)'/2;
         end
-        d;
-        D;
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Check for failure, are any of the d < 0?
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,7 +110,7 @@ function output = inerfcm(R, c, options)
            fprintf('t=%d: found %d negative relational distances.\n',numIter, length(negIdx));
            
            %tranform the distance matrices here
-           [D d beta, fcount, changes] = transform(transformType,R,D,d,V,U,beta,negIdx, fcount, MST, changes);
+           [D, d, changes] = heal(R,D,d,U,negIdx, MST, changes);
            bcount = bcount + 1;
         end
         
@@ -166,7 +159,8 @@ function output = inerfcm(R, c, options)
                     'terminationIter',numIter,...
                     'blockerCount',bcount,...
                     'D',D,...
-                    'changes',changes);
+                    'changes',changes,...
+                    'beta',beta);
                 
     if nargin == 3,output.options = options;end
 end

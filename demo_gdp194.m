@@ -17,8 +17,6 @@ c= 3;
 % Assumed ground truth
 labels = [ones(1,21) 2*ones(1,87) 3*ones(1,86)];
 GT = sparse(labels, 1:length(labels),1,c,length(labels));
-
-transforms = {'NE','NE','BS','PF','EP','LF'};
                     
 %% iRFCM configurations/options (those are the default values)
 options.fuzzifier        = 2;
@@ -27,23 +25,21 @@ options.maxIter          = 100;
 options.initType         = 2;
 
 %% Since RFCM failed we need to run iRFCM
-% loop for every delta
-for i=1:1 %length(transforms)
-    options.transform = transforms{i};
-    out = inerfcm(D.^2,c,options);
-        
-    %save the partition matrix for this delta
-    U = out.U;
-    dlmwrite(sprintf('Results/GDP194/Partitions/U_%s(%d).csv',transforms{i},c),U, 'delimiter',',');
+tic
+out = inerfcm(D.^2,c,options);
+toc
 
-    %save the induced dissimilarity image for this delta
-    %Ref. J. Huband and J. Bezdek, “VCV2– Visual cluster validity,” Comput. Intell. Res. Front., 2008.
-    uu = 1 - ((U'*U)./max(max(U'*U)));
-    f = figure('Visible','off');imagesc(uu);colormap('gray');caxis([0 1]);
-    print(f, '-djpeg', sprintf('Results/GDP194/Images/UU_%s(%d).jpg',transforms{i},c));
-    
-    %compute the crisp rand index
-    [~,labels] = max(U);
-    U = sparse(labels, 1:length(labels),1,c,length(labels));
-    r = rand_index(U,GT,2)
-end
+%save the partition matrix for this delta
+U = out.U;
+dlmwrite(sprintf('Results/GDP194/Partitions/U(%d).csv',c),U, 'delimiter',',');
+
+%save the induced dissimilarity image for this delta
+%Ref. J. Huband and J. Bezdek, “VCV2– Visual cluster validity,” Comput. Intell. Res. Front., 2008.
+uu = 1 - ((U'*U)./max(max(U'*U)));
+f = figure('Visible','off');imagesc(uu);colormap('gray');caxis([0 1]);
+print(f, '-djpeg', sprintf('Results/GDP194/Images/UU(%d).jpg',c));
+
+%compute the crisp rand index
+[~,labels] = max(U);
+U = sparse(labels, 1:length(labels),1,c,length(labels));
+r = rand_index(U,GT,2)
